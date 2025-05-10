@@ -1,0 +1,367 @@
+.capital-container {
+    padding: 20px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .capital-container h1 {
+    color: #ffffff;
+    font-size: 28px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .content-wrapper {
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .balance-section {
+    background: linear-gradient(135deg, rgba(15, 15, 30, 0.95) 0%, rgba(30, 30, 60, 0.95) 100%);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5); /* Убрали зелёное свечение */
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .balance {
+    color: #00ff99;
+    font-size: 30px;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(0, 255, 153, 0.7);
+    animation: glow 2s ease-in-out infinite;
+  }
+  
+  @keyframes glow {
+    0%, 100% {
+      text-shadow: 0 0 10px rgba(0, 255, 153, 0.7), 0 0 20px rgba(0, 255, 153, 0.5);
+    }
+    50% {
+      text-shadow: 0 0 20px rgba(0, 255, 153, 0.9), 0 0 30px rgba(0, 255, 153, 0.7);
+    }
+  }
+  
+  .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(0, 255, 153, 0.5);
+    border-radius: 50%;
+    animation: sparkle 5s infinite;
+  }
+  
+  @keyframes sparkle {
+    0% {
+      opacity: 0;
+      transform: scale(0);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0);
+    }
+  }
+  
+  .edit-button {
+    background: none;
+    border: none;
+    color: #aaaaaa;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  
+  .edit-button:hover {
+    color: #ffffff;
+  }
+  
+  .main-content {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+  }
+  
+  .expenses-section,
+  .progress-section {
+    flex: 1;
+    background: rgba(15, 15, 30, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .expenses-section h2,
+  .progress-header h2 {
+    color: #ffffff;
+    font-size: 20px;
+    margin: 0;
+    text-align: center;
+  }
+  
+  .progress-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .total-expenses {
+    color: #ff4d4d;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  .expenses-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+    max-height: 350px;
+  }
+  
+  .expenses-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .expenses-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+  }
+  
+  .expenses-list::-webkit-scrollbar-thumb {
+    background: #6366f1;
+    border-radius: 8px;
+  }
+  
+  .expense-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    color: #ffffff;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .expense-info {
+    flex: 1;
+  }
+  
+  .expense-info p {
+    margin: 3px 0;
+    font-size: 14px;
+  }
+  
+  .expense-info p.amount {
+    color: #ff4d4d;
+    font-weight: 500;
+  }
+  
+  .delete-expense-button {
+    background: none;
+    border: none;
+    color: #ff4d4d;
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  
+  .delete-expense-button:hover {
+    color: #ff7878;
+  }
+  
+  .expense-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .add-expense-button {
+    background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .add-expense-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5);
+  }
+  
+  .progress-bar-container {
+    position: relative;
+    width: 80px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+  
+  .progress-bar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(0deg, #6366f1 0%, #a855f7 100%);
+    transition: height 0.3s ease;
+  }
+  
+  .progress-marks {
+    position: absolute;
+    left: 90px;
+    height: 400px;
+    width: 20px;
+  }
+  
+  .mark {
+    position: absolute;
+    width: 10px;
+    height: 2px;
+    background: #aaaaaa;
+  }
+  
+  .mark-label {
+    position: absolute;
+    left: 20px;
+    color: #aaaaaa;
+    font-size: 12px;
+  }
+  
+  .progress-display {
+    margin: 20px auto 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .progress-label {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 500;
+  }
+  
+  .progress-value {
+    color: #00ff99;
+    font-size: 20px;
+    font-weight: 500;
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal {
+    background: rgba(15, 15, 30, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 400px;
+    color: #ffffff;
+    text-align: center;
+  }
+  
+  .modal h2 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    color: #ffffff;
+  }
+  
+  .modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .modal input[type="number"],
+  .modal input[type="text"],
+  .modal textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    color: #ffffff;
+    font-size: 14px;
+    outline: none;
+    transition: background 0.2s;
+  }
+  
+  .modal textarea {
+    resize: none;
+    height: 80px;
+  }
+  
+  .modal input[type="number"]:focus,
+  .modal input[type="text"]:focus,
+  .modal textarea:focus {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .modal-buttons button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .modal-buttons button[type="submit"] {
+    background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+    color: #ffffff;
+  }
+  
+  .modal-buttons button[type="button"] {
+    background: rgba(255, 255, 255, 0.05);
+    color: #aaaaaa;
+  }
+  
+  .modal-buttons button:hover {
+    transform: translateY(-2px);
+  }

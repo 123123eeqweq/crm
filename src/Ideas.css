@@ -1,0 +1,227 @@
+.ideas-container {
+    padding: 20px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .ideas-container h1 {
+    color: #ffffff;
+    font-size: 28px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .ideas-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    max-width: 1200px;
+    margin-bottom: 20px;
+  }
+  
+  .idea-card {
+    background: rgba(15, 15, 30, 0.95);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    width: 300px;
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  
+  .idea-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .idea-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #00ff99;
+  }
+  
+  .idea-info p {
+    margin: 3px 0;
+    font-size: 14px;
+    color: #aaaaaa;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Ограничение на 3 строки */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .idea-info p.author {
+    color: #ffffff;
+    font-weight: 500;
+  }
+  
+  .add-idea-button {
+    background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 20px;
+  }
+  
+  .add-idea-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5);
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal {
+    background: rgba(15, 15, 30, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 400px;
+    color: #ffffff;
+    position: relative; /* Для позиционирования кнопки удаления */
+  }
+  
+  .modal h2 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    text-align: center;
+    color: #ffffff;
+  }
+  
+  .modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .modal input[type="text"],
+  .modal textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    color: #ffffff;
+    font-size: 14px;
+    outline: none;
+    transition: background 0.2s;
+  }
+  
+  .modal textarea {
+    resize: none;
+    height: 100px;
+  }
+  
+  .modal input[type="text"]:focus,
+  .modal textarea:focus {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .modal-buttons button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .modal-buttons button[type="submit"] {
+    background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+    color: #ffffff;
+  }
+  
+  .modal-buttons button[type="button"] {
+    background: rgba(255, 255, 255, 0.05);
+    color: #aaaaaa;
+  }
+  
+  .modal-buttons button:hover {
+    transform: translateY(-2px);
+  }
+  
+  .idea-modal {
+    max-width: 500px; /* Чуть шире для длинного текста */
+  }
+  
+  .idea-modal-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #00ff99;
+  }
+  
+  .idea-modal-content p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #aaaaaa;
+  }
+  
+  .idea-modal-content p.author {
+    color: #ffffff;
+    font-weight: 500;
+  }
+  
+  .idea-modal-content p.description {
+    color: #ffffff;
+    white-space: pre-wrap; /* Сохраняем переносы строк */
+  }
+  
+  .delete-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #ff4d4d; /* Красный цвет для мусорки */
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  
+  .delete-button:hover {
+    color: #ff7878;
+  }
+  
+  .close-button {
+    background: rgba(255, 255, 255, 0.05);
+    color: #aaaaaa;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    margin-top: 20px;
+  }
+  
+  .close-button:hover {
+    transform: translateY(-2px);
+  }

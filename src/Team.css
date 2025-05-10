@@ -1,0 +1,408 @@
+.team-container {
+  padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.team-container h1 {
+  color: #ffffff;
+  font-size: 28px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.team-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  max-width: 1200px;
+  margin-bottom: 20px;
+}
+
+.team-member {
+  background: rgba(15, 15, 30, 0.95);
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  width: 300px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.team-member:hover {
+  transform: translateY(-5px);
+}
+
+.team-member img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #00ff99;
+}
+
+.member-info {
+  flex: 1;
+  color: #ffffff;
+}
+
+.member-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #00ff99;
+}
+
+.member-info p {
+  margin: 3px 0;
+  font-size: 14px;
+  color: #aaaaaa;
+}
+
+.member-info p.position {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.add-member-button {
+  background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 20px;
+}
+
+.add-member-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: rgba(15, 15, 30, 0.95);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  width: 100%;
+  max-width: 400px;
+  color: #ffffff;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal h2 {
+  margin: 0;
+  font-size: 20px;
+  text-align: center;
+  color: #ffffff;
+  margin-bottom: 20px;
+}
+
+.modal p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.modal p strong {
+  color: #00ff99;
+}
+
+.delete-icon {
+  background: none;
+  border: none;
+  color: #ff4d4d;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.delete-icon:hover {
+  color: #ff7878;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal textarea {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: background 0.2s;
+  resize: none;
+  height: 80px;
+}
+
+.modal textarea:focus {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modal input[type="text"],
+.modal input[type="file"] {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: background 0.2s;
+}
+
+.modal input[type="text"]:focus {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modal input[type="file"] {
+  padding: 5px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.modal-buttons button[type="submit"] {
+  background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+  color: #ffffff;
+}
+
+.modal-buttons button[type="button"] {
+  background: rgba(255, 255, 255, 0.05);
+  color: #aaaaaa;
+}
+
+.modal-buttons button:hover {
+  transform: translateY(-2px);
+}
+
+.member-modal {
+  text-align: left;
+}
+
+/* Адаптация для различных разрешений ПК */
+
+/* Для маленьких экранов ПК (1024px - 1280px) */
+@media (max-width: 1280px) {
+  .team-list {
+    max-width: 900px; /* Уменьшаем максимальную ширину списка */
+    gap: 15px; /* Чуть меньше отступы между карточками */
+  }
+
+  .team-member {
+    width: 280px; /* Уменьшаем ширину карточки */
+    padding: 12px; /* Уменьшаем внутренние отступы */
+  }
+
+  .team-member img {
+    width: 70px; /* Уменьшаем размер аватарки */
+    height: 70px;
+  }
+
+  .member-info h3 {
+    font-size: 16px; /* Уменьшаем размер заголовка */
+  }
+
+  .member-info p {
+    font-size: 13px; /* Уменьшаем размер текста */
+  }
+
+  .modal {
+    max-width: 350px; /* Уменьшаем модальное окно */
+    padding: 15px; /* Уменьшаем отступы в модалке */
+  }
+
+  .modal h2 {
+    font-size: 18px; /* Уменьшаем заголовок модалки */
+  }
+
+  .modal textarea,
+  .modal input[type="text"],
+  .modal input[type="file"] {
+    font-size: 13px; /* Уменьшаем текст в полях ввода */
+  }
+
+  .modal-buttons button {
+    padding: 8px 16px; /* Уменьшаем кнопки */
+    font-size: 13px;
+  }
+}
+
+/* Для средних экранов ПК (1281px - 1920px) - базовые стили подходят, но добавим мелкие корректировки */
+@media (min-width: 1281px) and (max-width: 1920px) {
+  .team-list {
+    max-width: 1200px; /* Оставляем как есть */
+  }
+
+  .team-member {
+    width: 300px; /* Базовая ширина */
+  }
+
+  .team-member img {
+    width: 80px; /* Базовый размер */
+    height: 80px;
+  }
+
+  .modal {
+    max-width: 400px; /* Базовая ширина модалки */
+  }
+}
+
+/* Для больших экранов ПК (1921px - 2560px) */
+@media (min-width: 1921px) and (max-width: 2560px) {
+  .team-list {
+    max-width: 1500px; /* Увеличиваем максимальную ширину списка */
+    gap: 25px; /* Увеличиваем отступы между карточками */
+  }
+
+  .team-member {
+    width: 340px; /* Увеличиваем ширину карточки */
+    padding: 18px; /* Увеличиваем внутренние отступы */
+  }
+
+  .team-member img {
+    width: 90px; /* Увеличиваем размер аватарки */
+    height: 90px;
+  }
+
+  .member-info h3 {
+    font-size: 20px; /* Увеличиваем размер заголовка */
+  }
+
+  .member-info p {
+    font-size: 15px; /* Увеличиваем размер текста */
+  }
+
+  .team-container h1 {
+    font-size: 32px; /* Увеличиваем заголовок страницы */
+  }
+
+  .add-member-button {
+    padding: 14px 24px; /* Увеличиваем кнопку */
+    font-size: 18px;
+  }
+
+  .modal {
+    max-width: 450px; /* Увеличиваем модальное окно */
+    padding: 25px; /* Увеличиваем отступы */
+  }
+
+  .modal h2 {
+    font-size: 22px; /* Увеличиваем заголовок модалки */
+  }
+
+  .modal textarea,
+  .modal input[type="text"],
+  .modal input[type="file"] {
+    font-size: 15px; /* Увеличиваем текст в полях ввода */
+    padding: 12px;
+  }
+
+  .modal-buttons button {
+    padding: 12px 24px; /* Увеличиваем кнопки */
+    font-size: 15px;
+  }
+}
+
+/* Для очень больших экранов ПК (2561px и выше, например, 4K) */
+@media (min-width: 2561px) {
+  .team-list {
+    max-width: 1800px; /* Ещё больше увеличиваем ширину списка */
+    gap: 30px; /* Увеличиваем отступы */
+  }
+
+  .team-member {
+    width: 380px; /* Увеличиваем карточку */
+    padding: 20px; /* Увеличиваем отступы */
+  }
+
+  .team-member img {
+    width: 100px; /* Увеличиваем аватарку */
+    height: 100px;
+  }
+
+  .member-info h3 {
+    font-size: 22px; /* Увеличиваем заголовок */
+  }
+
+  .member-info p {
+    font-size: 16px; /* Увеличиваем текст */
+  }
+
+  .team-container h1 {
+    font-size: 36px; /* Увеличиваем заголовок страницы */
+  }
+
+  .add-member-button {
+    padding: 16px 28px; /* Увеличиваем кнопку */
+    font-size: 20px;
+  }
+
+  .modal {
+    max-width: 500px; /* Увеличиваем модальное окно */
+    padding: 30px; /* Увеличиваем отступы */
+  }
+
+  .modal h2 {
+    font-size: 24px; /* Увеличиваем заголовок модалки */
+  }
+
+  .modal textarea,
+  .modal input[type="text"],
+  .modal input[type="file"] {
+    font-size: 16px; /* Увеличиваем текст в полях ввода */
+    padding: 14px;
+  }
+
+  .modal-buttons button {
+    padding: 14px 28px; /* Увеличиваем кнопки */
+    font-size: 16px;
+  }
+}
