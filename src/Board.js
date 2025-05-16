@@ -11,10 +11,10 @@ function Board({ socket }) {
   const [newTask, setNewTask] = useState('');
   const [contextMenu, setContextMenu] = useState(null);
   const [colorMenu, setColorMenu] = useState(null);
+  const [editTask, setEditTask] = useState(null);
   const boardRef = useRef(null);
   const contextMenuRef = useRef(null);
   const colorMenuRef = useRef(null);
-
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
@@ -25,6 +25,7 @@ function Board({ socket }) {
       window.location.href = '/login';
       return;
     }
+
     fetch('https://631f-147-45-43-26.ngrok-free.app/api/tasks', {
       headers: {
         Authorization: `Bearer ${currentToken}`,
@@ -59,24 +60,17 @@ function Board({ socket }) {
 
   useEffect(() => {
     if (socket) {
-      socket.on('connect', () => {
-      });
-
-      socket.on('connect_error', (err) => {
-      });
-
+      socket.on('connect', () => {});
+      socket.on('connect_error', (err) => {});
       socket.on('taskUpdated', (task) => {
         const normalizedColumn = task.column.replace(' ', '_');
         setColumns((prev) => {
           const newColumns = { ...prev };
           if (newColumns[normalizedColumn]) {
-            // Проверяем, есть ли задача с таким _id
             const taskIndex = newColumns[normalizedColumn].findIndex((t) => t._id === task._id);
             if (taskIndex !== -1) {
-              // Если задача уже есть, обновляем её
               newColumns[normalizedColumn][taskIndex] = task;
             } else {
-              // Если задачи нет, добавляем её
               newColumns[normalizedColumn].push(task);
             }
           }
@@ -149,14 +143,15 @@ function Board({ socket }) {
         elapsedTime: null,
         column: column.replace('_', ' '),
       };
-      socket.emit('taskUpdate', task); // Только отправляем на сервер, не добавляем локально
+      socket.emit('taskUpdate', task);
     }
   };
 
   const handleDeleteTask = (taskId, column) => {
-    socket.emit('taskDelete', taskId); // Только отправляем на сервер, не удаляем локально
+    socket.emit('taskDelete', taskId);
     setContextMenu(null);
     setColorMenu(null);
+    setEditTask(null);
   };
 
   const handleContextMenu = (e, taskId, column) => {
@@ -168,6 +163,7 @@ function Board({ socket }) {
       column,
     });
     setColorMenu(null);
+    setEditTask(null);
   };
 
   const handleColorMenu = (e) => {
@@ -235,6 +231,27 @@ function Board({ socket }) {
     setContextMenu(null);
   };
 
+  const handleEditTask = (taskId, column) => {
+    const task = columns[column].find((t) => t._id === taskId);
+    setEditTask({ taskId, column, title: task.title });
+    setContextMenu(null);
+  };
+
+  const handleEditSubmit = (taskId, column) => {
+    if (editTask.title.trim()) {
+      setColumns((prev) => {
+        const newColumns = { ...prev };
+        const task = newColumns[column].find((t) => t._id === taskId);
+        if (task) {
+          task.title = editTask.title;
+          socket.emit('taskUpdate', task);
+        }
+        return newColumns;
+      });
+    }
+    setEditTask(null);
+  };
+
   const formatTime = (ms) => {
     if (!ms) return '0:00';
     const seconds = Math.floor((ms / 1000) % 60);
@@ -249,11 +266,11 @@ function Board({ socket }) {
       if (
         contextMenuRef.current &&
         !contextMenuRef.current.contains(e.target) &&
-        colorMenuRef.current &&
-        !colorMenuRef.current.contains(e.target)
+        (!colorMenuRef.current || !colorMenuRef.current.contains(e.target))
       ) {
         setContextMenu(null);
         setColorMenu(null);
+        setEditTask(null);
       }
       if (
         Object.values(isAdding).some((adding) => adding) &&
@@ -276,6 +293,7 @@ function Board({ socket }) {
         setColorMenu(null);
         setIsAdding({});
         setNewTask('');
+        setEditTask(null);
       }
     };
 
@@ -309,11 +327,31 @@ function Board({ socket }) {
                 >
                   <div className="checkbox"></div>
                   <div className="task-content">
-                    <span className="task-title">{task.title}</span>
-                    {task.elapsedTime !== null && (
-                      <span className={`timer ${task.startTime ? 'active' : 'stopped'}`}>
-                        {formatTime(task.elapsedTime)}
-                      </span>
+                    {editTask && editTask.taskId === task._id ? (
+                      <div className="edit-task-form">
+                        <input
+                          type="text"
+                          className="add-task-input"
+                          value={editTask.title}
+                          onChange={(e) => setEditTask({ ...editTask, title: e.target.value })}
+                          autoFocus
+                        />
+                        <button
+                          className="add-task-submit"
+                          onClick={() => handleEditSubmit(task._id, column)}
+                        >
+                          Сохранить
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="task-title">{task.title}</span>
+                        {task.elapsedTime !== null && (
+                          <span className={`timer ${task.startTime ? 'active' : 'stopped'}`}>
+                            {formatTime(task.elapsedTime)}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -356,6 +394,12 @@ function Board({ socket }) {
         >
           <div className="context-menu-item" onClick={handleColorMenu}>
             Выбрать цвет
+          </div>
+          <div
+            className="context-menu-item"
+            onClick={() => handleEditTask(contextMenu.taskId, contextMenu.column)}
+          >
+            Редактировать
           </div>
           {columns[contextMenu.column].find((task) => task._id === contextMenu.taskId).startTime ? (
             <div
