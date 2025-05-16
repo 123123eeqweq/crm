@@ -18,7 +18,7 @@ useEffect(() => {
   if (isLoggedIn) {
     const token = localStorage.getItem('token');
 
-    const newSocket = io('https://631f-147-45-43-26.ngrok-free.app', {
+    const newSocket = io('https://f541-89-22-227-119.ngrok-free.app', {
       auth: {
         token: token,
       },

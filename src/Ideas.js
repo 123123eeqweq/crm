@@ -27,7 +27,7 @@ function Ideas({ socket }) { // Принимаем socket как пропс
     }
 
     console.log('Fetching ideas with token:', currentToken);
-    fetch('https://631f-147-45-43-26.ngrok-free.app/api/ideas', {
+    fetch('https://f541-89-22-227-119.ngrok-free.app/api/ideas', {
   headers: {
     Authorization: `Bearer ${currentToken}`,
     'ngrok-skip-browser-warning': 'true', // Добавляем заголовок

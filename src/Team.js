@@ -30,7 +30,7 @@ function Team({ socket }) { // Принимаем socket как пропс
     }
 
     console.log('Fetching team with token:', currentToken);
-fetch('https://631f-147-45-43-26.ngrok-free.app/api/team', {
+fetch('https://f541-89-22-227-119.ngrok-free.app/api/team', {
   headers: {
     Authorization: `Bearer ${currentToken}`,
     'ngrok-skip-browser-warning': 'true', // Добавляем заголовок

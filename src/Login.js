@@ -28,7 +28,7 @@ function Login({ onLogin }) {
     const enteredPin = pin.join('');
 
     try {
-const response = await fetch('https://631f-147-45-43-26.ngrok-free.app/api/auth/login', {
+const response = await fetch('https://f541-89-22-227-119.ngrok-free.app/api/auth/login', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

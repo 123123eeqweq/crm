@@ -32,7 +32,7 @@ function Capital({ socket }) { // Принимаем socket как пропс
       return;
     }
 
-    fetch('https://631f-147-45-43-26.ngrok-free.app/api/capital', {
+    fetch('https://f541-89-22-227-119.ngrok-free.app/api/capital', {
   headers: {
     Authorization: `Bearer ${currentToken}`,
     'ngrok-skip-browser-warning': 'true', // Добавляем заголовок
