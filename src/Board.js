@@ -334,6 +334,13 @@ function Board({ socket }) {
                           className="add-task-input"
                           value={editTask.title}
                           onChange={(e) => setEditTask({ ...editTask, title: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              console.log('Enter pressed in edit, column:', column, 'title:', editTask.title);
+                              handleEditSubmit(task._id, column);
+                            }
+                          }}
+                          placeholder="Введите название задачи"
                           autoFocus
                         />
                         <button
@@ -363,6 +370,14 @@ function Board({ socket }) {
                     className="add-task-input"
                     value={newTask}
                     onChange={(e) => setNewTask(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        console.log('Enter pressed in add, column:', column, 'newTask:', newTask);
+                        if (newTask.trim()) {
+                          handleAddTask(column);
+                        }
+                      }
+                    }}
                     placeholder="Введите название задачи"
                     autoFocus
                   />
