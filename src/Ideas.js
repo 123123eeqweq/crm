@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
 import { FaTrash } from 'react-icons/fa';
 import './Ideas.css';
 
-// Инициализируем Socket.IO без токена, подключим его позже
-let socket;
-
-function Ideas() {
+function Ideas({ socket }) { // Принимаем socket как пропс
   const [ideas, setIdeas] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isIdeaModalOpen, setIsIdeaModalOpen] = useState(false);
@@ -17,44 +13,31 @@ function Ideas() {
     description: '',
   });
 
-  // Получаем токен внутри компонента
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // Обновляем токен при монтировании
   useEffect(() => {
     const currentToken = localStorage.getItem('token');
     console.log('Token in Ideas.js useEffect:', currentToken);
     setToken(currentToken);
 
-    // Подключаемся к Socket.IO с актуальным токеном
-    socket = io('http://localhost:5000', {
-      auth: { token: currentToken },
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  // Загружаем идеи с бэкенда при старте
-  useEffect(() => {
-    if (!token) {
+    if (!currentToken) {
       console.log('No token, redirecting to login');
       window.location.href = '/login';
       return;
     }
 
-    console.log('Fetching ideas with token:', token);
-    fetch('http://localhost:5000/api/ideas', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        console.log('Fetch response status:', res.status);
-        if (!res.ok) throw new Error('Неавторизованный доступ');
-        return res.json();
-      })
+    console.log('Fetching ideas with token:', currentToken);
+    fetch('https://631f-147-45-43-26.ngrok-free.app/api/ideas', {
+  headers: {
+    Authorization: `Bearer ${currentToken}`,
+    'ngrok-skip-browser-warning': 'true', // Добавляем заголовок
+  },
+})
+  .then((res) => {
+    console.log('Fetch response status:', res.status);
+    if (!res.ok) throw new Error('Неавторизованный доступ');
+    return res.json();
+  })
       .then((data) => {
         console.log('Fetched ideas:', data);
         setIdeas(data);
@@ -64,41 +47,40 @@ function Ideas() {
         localStorage.removeItem('token');
         window.location.href = '/login';
       });
-  }, [token]); // Зависимость от token
+  }, []);
 
-  // Слушаем обновления от Socket.IO
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to Socket.IO');
-    });
+    if (socket) { // Проверяем, что socket передан
+      socket.on('connect', () => {
+      });
 
-    socket.on('connect_error', (err) => {
-      console.error('Socket.IO connection error:', err.message);
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    });
+      socket.on('connect_error', (err) => {
+        console.error('Socket.IO connection error in Ideas:', err.message);
+        // Не перенаправляем на логин, так как это обрабатывается в App.js
+      });
 
-    socket.on('ideaAdded', (newIdea) => {
-      console.log('Received ideaAdded:', newIdea);
-      setIdeas((prev) => [...prev, newIdea]);
-    });
+      socket.on('ideaAdded', (newIdea) => {
+        console.log('Received ideaAdded:', newIdea);
+        setIdeas((prev) => [...prev, newIdea]);
+      });
 
-    socket.on('ideaDeleted', (ideaId) => {
-      console.log('Received ideaDeleted:', ideaId);
-      setIdeas((prev) => prev.filter((idea) => idea._id !== ideaId));
-      if (selectedIdea && selectedIdea._id === ideaId) {
-        setIsIdeaModalOpen(false);
-        setSelectedIdea(null);
-      }
-    });
+      socket.on('ideaDeleted', (ideaId) => {
+        console.log('Received ideaDeleted:', ideaId);
+        setIdeas((prev) => prev.filter((idea) => idea._id !== ideaId));
+        if (selectedIdea && selectedIdea._id === ideaId) {
+          setIsIdeaModalOpen(false);
+          setSelectedIdea(null);
+        }
+      });
 
-    return () => {
-      socket.off('ideaAdded');
-      socket.off('ideaDeleted');
-      socket.off('connect');
-      socket.off('connect_error');
-    };
-  }, [selectedIdea]);
+      return () => {
+        socket.off('ideaAdded');
+        socket.off('ideaDeleted');
+        socket.off('connect');
+        socket.off('connect_error');
+      };
+    }
+  }, [socket, selectedIdea]); // Добавляем socket как зависимость
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

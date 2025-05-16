@@ -26,16 +26,16 @@ function Login({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const enteredPin = pin.join('');
-    console.log('Sending PIN to server:', enteredPin, typeof enteredPin); // Добавляем логирование
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password: enteredPin }),
-      });
+const response = await fetch('https://631f-147-45-43-26.ngrok-free.app/api/auth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true', // Добавляем заголовок
+  },
+  body: JSON.stringify({ password: enteredPin }),
+});
 
       const data = await response.json();
       if (!response.ok) {

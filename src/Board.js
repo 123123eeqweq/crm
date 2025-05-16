@@ -1,10 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import io from 'socket.io-client';
 import './Board.css';
 
-let socket;
-
-function Board() {
+function Board({ socket }) {
   const [columns, setColumns] = useState({
     Масик_1: [],
     Масик_2: [],
@@ -22,40 +19,25 @@ function Board() {
 
   useEffect(() => {
     const currentToken = localStorage.getItem('token');
-    console.log('Token in Board.js useEffect:', currentToken);
     setToken(currentToken);
 
-    socket = io('http://localhost:5000', {
-      auth: { token: currentToken },
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!token) {
-      console.log('No token, redirecting to login');
+    if (!currentToken) {
       window.location.href = '/login';
       return;
     }
-
-    console.log('Fetching tasks with token:', token);
-    fetch('http://localhost:5000/api/tasks', {
+    fetch('https://631f-147-45-43-26.ngrok-free.app/api/tasks', {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${currentToken}`,
+        'ngrok-skip-browser-warning': 'true',
       },
     })
       .then((res) => {
-        console.log('Fetch response status:', res.status);
         if (!res.ok) {
           throw new Error(`Неавторизованный доступ: ${res.status}`);
         }
         return res.json();
       })
       .then((tasks) => {
-        console.log('Fetched tasks:', tasks);
         const newColumns = {
           KLMN: [],
           KLVR: [],
@@ -70,59 +52,60 @@ function Board() {
         setColumns(newColumns);
       })
       .catch((err) => {
-        console.error('Error fetching tasks:', err.message);
         localStorage.removeItem('token');
         window.location.href = '/login';
       });
-  }, [token]);
+  }, []);
 
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to Socket.IO');
-    });
-
-    socket.on('connect_error', (err) => {
-      console.error('Socket.IO connection error:', err.message);
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    });
-
-    socket.on('taskUpdated', (task) => {
-      console.log('Received taskUpdated:', task);
-      const normalizedColumn = task.column.replace(' ', '_');
-      setColumns((prev) => {
-        const newColumns = { ...prev };
-        if (newColumns[normalizedColumn]) {
-          newColumns[normalizedColumn] = newColumns[normalizedColumn].map((t) =>
-            t._id === task._id ? task : t
-          );
-        }
-        return newColumns;
+    if (socket) {
+      socket.on('connect', () => {
       });
-      if (newTask && task.title === newTask) {
-        setNewTask('');
-        setIsAdding((prev) => ({ ...prev, [normalizedColumn]: false }));
-      }
-    });
 
-    socket.on('taskDeleted', (taskId) => {
-      console.log('Received taskDeleted:', taskId);
-      setColumns((prev) => {
-        const newColumns = { ...prev };
-        Object.keys(newColumns).forEach((col) => {
-          newColumns[col] = newColumns[col].filter((t) => t._id !== taskId);
+      socket.on('connect_error', (err) => {
+      });
+
+      socket.on('taskUpdated', (task) => {
+        const normalizedColumn = task.column.replace(' ', '_');
+        setColumns((prev) => {
+          const newColumns = { ...prev };
+          if (newColumns[normalizedColumn]) {
+            // Проверяем, есть ли задача с таким _id
+            const taskIndex = newColumns[normalizedColumn].findIndex((t) => t._id === task._id);
+            if (taskIndex !== -1) {
+              // Если задача уже есть, обновляем её
+              newColumns[normalizedColumn][taskIndex] = task;
+            } else {
+              // Если задачи нет, добавляем её
+              newColumns[normalizedColumn].push(task);
+            }
+          }
+          return newColumns;
         });
-        return newColumns;
+        if (newTask && task.title === newTask) {
+          setNewTask('');
+          setIsAdding((prev) => ({ ...prev, [normalizedColumn]: false }));
+        }
       });
-    });
 
-    return () => {
-      socket.off('taskUpdated');
-      socket.off('taskDeleted');
-      socket.off('connect');
-      socket.off('connect_error');
-    };
-  }, [newTask]);
+      socket.on('taskDeleted', (taskId) => {
+        setColumns((prev) => {
+          const newColumns = { ...prev };
+          Object.keys(newColumns).forEach((col) => {
+            newColumns[col] = newColumns[col].filter((t) => t._id !== taskId);
+          });
+          return newColumns;
+        });
+      });
+
+      return () => {
+        socket.off('taskUpdated');
+        socket.off('taskDeleted');
+        socket.off('connect');
+        socket.off('connect_error');
+      };
+    }
+  }, [socket, newTask]);
 
   const toggleTask = (column, taskId, event) => {
     setColumns((prev) => {
@@ -166,25 +149,12 @@ function Board() {
         elapsedTime: null,
         column: column.replace('_', ' '),
       };
-      console.log('Sending task to server:', task);
-      socket.emit('taskUpdate', task);
+      socket.emit('taskUpdate', task); // Только отправляем на сервер, не добавляем локально
     }
   };
 
   const handleDeleteTask = (taskId, column) => {
-    setColumns((prev) => {
-      const updatedColumn = prev[column].map((task) => {
-        if (task._id === taskId && task.timer) {
-          clearInterval(task.timer);
-        }
-        return task;
-      }).filter((task) => task._id !== taskId);
-      return {
-        ...prev,
-        [column]: updatedColumn,
-      };
-    });
-    socket.emit('taskDelete', taskId);
+    socket.emit('taskDelete', taskId); // Только отправляем на сервер, не удаляем локально
     setContextMenu(null);
     setColorMenu(null);
   };

@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
 import { FaTrash } from 'react-icons/fa';
 import './Team.css';
 
-// Инициализируем Socket.IO без токена, подключим его позже
-let socket;
-
-function Team() {
+function Team({ socket }) { // Принимаем socket как пропс
   const [teamMembers, setTeamMembers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
@@ -20,44 +16,31 @@ function Team() {
     avatar: null,
   });
 
-  // Получаем токен внутри компонента
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // Обновляем токен при монтировании
   useEffect(() => {
     const currentToken = localStorage.getItem('token');
     console.log('Token in Team.js useEffect:', currentToken);
     setToken(currentToken);
 
-    // Подключаемся к Socket.IO с актуальным токеном
-    socket = io('http://localhost:5000', {
-      auth: { token: currentToken },
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  // Загружаем участников с бэкенда при старте
-  useEffect(() => {
-    if (!token) {
+    if (!currentToken) {
       console.log('No token, redirecting to login');
       window.location.href = '/login';
       return;
     }
 
-    console.log('Fetching team with token:', token);
-    fetch('http://localhost:5000/api/team', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        console.log('Fetch response status:', res.status);
-        if (!res.ok) throw new Error('Неавторизованный доступ');
-        return res.json();
-      })
+    console.log('Fetching team with token:', currentToken);
+fetch('https://631f-147-45-43-26.ngrok-free.app/api/team', {
+  headers: {
+    Authorization: `Bearer ${currentToken}`,
+    'ngrok-skip-browser-warning': 'true', // Добавляем заголовок
+  },
+})
+  .then((res) => {
+    console.log('Fetch response status:', res.status);
+    if (!res.ok) throw new Error('Неавторизованный доступ');
+    return res.json();
+  })
       .then((data) => {
         console.log('Fetched team members:', data);
         setTeamMembers(data);
@@ -67,41 +50,40 @@ function Team() {
         localStorage.removeItem('token');
         window.location.href = '/login';
       });
-  }, [token]); // Зависимость от token
+  }, []);
 
-  // Слушаем обновления от Socket.IO
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to Socket.IO');
-    });
+    if (socket) { // Проверяем, что socket передан
+      socket.on('connect', () => {
+      });
 
-    socket.on('connect_error', (err) => {
-      console.error('Socket.IO connection error:', err.message);
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    });
+      socket.on('connect_error', (err) => {
+        console.error('Socket.IO connection error in Team:', err.message);
+        // Не перенаправляем на логин, так как это обрабатывается в App.js
+      });
 
-    socket.on('memberAdded', (newMember) => {
-      console.log('Received memberAdded:', newMember);
-      setTeamMembers((prev) => [...prev, newMember]);
-    });
+      socket.on('memberAdded', (newMember) => {
+        console.log('Received memberAdded:', newMember);
+        setTeamMembers((prev) => [...prev, newMember]);
+      });
 
-    socket.on('memberDeleted', (memberId) => {
-      console.log('Received memberDeleted:', memberId);
-      setTeamMembers((prev) => prev.filter((member) => member._id !== memberId));
-      if (selectedMember && selectedMember._id === memberId) {
-        setIsMemberModalOpen(false);
-        setSelectedMember(null);
-      }
-    });
+      socket.on('memberDeleted', (memberId) => {
+        console.log('Received memberDeleted:', memberId);
+        setTeamMembers((prev) => prev.filter((member) => member._id !== memberId));
+        if (selectedMember && selectedMember._id === memberId) {
+          setIsMemberModalOpen(false);
+          setSelectedMember(null);
+        }
+      });
 
-    return () => {
-      socket.off('memberAdded');
-      socket.off('memberDeleted');
-      socket.off('connect');
-      socket.off('connect_error');
-    };
-  }, [selectedMember]);
+      return () => {
+        socket.off('memberAdded');
+        socket.off('memberDeleted');
+        socket.off('connect');
+        socket.off('connect_error');
+      };
+    }
+  }, [socket, selectedMember]); // Добавляем socket как зависимость
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

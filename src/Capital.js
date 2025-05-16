@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import './Capital.css';
 
-// Инициализируем Socket.IO без токена, подключим его позже
-let socket;
-
-function Capital() {
+function Capital({ socket }) { // Принимаем socket как пропс
   const [totalCapital, setTotalCapital] = useState(0);
   const [displayCapital, setDisplayCapital] = useState(0);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -25,46 +21,28 @@ function Capital() {
     amount: '',
   });
 
-  // Получаем токен внутри компонента
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // Обновляем токен при монтировании
   useEffect(() => {
     const currentToken = localStorage.getItem('token');
-    console.log('Token in Capital.js useEffect:', currentToken);
     setToken(currentToken);
 
-    // Подключаемся к Socket.IO с актуальным токеном
-    socket = io('http://localhost:5000', {
-      auth: { token: currentToken },
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  // Загружаем данные с бэкенда при старте
-  useEffect(() => {
-    if (!token) {
-      console.log('No token, redirecting to login');
+    if (!currentToken) {
       window.location.href = '/login';
       return;
     }
 
-    console.log('Fetching capital with token:', token);
-    fetch('http://localhost:5000/api/capital', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        console.log('Fetch response status:', res.status);
-        if (!res.ok) throw new Error('Неавторизованный доступ');
-        return res.json();
-      })
+    fetch('https://631f-147-45-43-26.ngrok-free.app/api/capital', {
+  headers: {
+    Authorization: `Bearer ${currentToken}`,
+    'ngrok-skip-browser-warning': 'true', // Добавляем заголовок
+  },
+})
+  .then((res) => {
+    if (!res.ok) throw new Error('Неавторизованный доступ');
+    return res.json();
+  })
       .then((data) => {
-        console.log('Fetched capital data:', data);
         setTotalCapital(data.totalCapital);
         setDisplayCapital(data.totalCapital);
         setCurrentProgress(data.currentProgress);
@@ -72,39 +50,35 @@ function Capital() {
         setExpenses(data.expenses || []);
       })
       .catch((err) => {
-        console.error('Error fetching capital data:', err);
         localStorage.removeItem('token');
         window.location.href = '/login';
       });
-  }, [token]); // Зависимость от token
-
-  // Слушаем обновления от Socket.IO
-  useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to Socket.IO');
-    });
-
-    socket.on('connect_error', (err) => {
-      console.error('Socket.IO connection error:', err.message);
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    });
-
-    socket.on('capitalUpdated', (data) => {
-      console.log('Received capitalUpdated:', data);
-      setTotalCapital(data.totalCapital);
-      setDisplayCapital(data.totalCapital);
-      setCurrentProgress(data.currentProgress);
-      setMonthlyGoal(data.monthlyGoal);
-      setExpenses(data.expenses || []);
-    });
-
-    return () => {
-      socket.off('capitalUpdated');
-      socket.off('connect');
-      socket.off('connect_error');
-    };
   }, []);
+
+  useEffect(() => {
+    if (socket) { // Проверяем, что socket передан
+      socket.on('connect', () => {
+      });
+
+      socket.on('connect_error', (err) => {
+        // Не перенаправляем на логин, так как это обрабатывается в App.js
+      });
+
+      socket.on('capitalUpdated', (data) => {
+        setTotalCapital(data.totalCapital);
+        setDisplayCapital(data.totalCapital);
+        setCurrentProgress(data.currentProgress);
+        setMonthlyGoal(data.monthlyGoal);
+        setExpenses(data.expenses || []);
+      });
+
+      return () => {
+        socket.off('capitalUpdated');
+        socket.off('connect');
+        socket.off('connect_error');
+      };
+    }
+  }, [socket]); // Добавляем socket как зависимость
 
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
