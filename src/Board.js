@@ -3,9 +3,9 @@ import './Board.css';
 
 function Board({ socket }) {
   const [columns, setColumns] = useState({
-    Масик_1: [],
-    Масик_2: [],
-    Хуй: [],
+    KLMN: [],
+    KLVR: [],
+    Надо_сделать: [],
   });
   const [isAdding, setIsAdding] = useState({});
   const [newTask, setNewTask] = useState('');
@@ -53,6 +53,7 @@ function Board({ socket }) {
         setColumns(newColumns);
       })
       .catch((err) => {
+        console.error('Fetch tasks error:', err);
         localStorage.removeItem('token');
         window.location.href = '/login';
       });
@@ -60,18 +61,23 @@ function Board({ socket }) {
 
   useEffect(() => {
     if (socket) {
-      socket.on('connect', () => {});
-      socket.on('connect_error', (err) => {});
+      socket.on('connect', () => {
+        console.log('Socket connected');
+      });
+      socket.on('connect_error', (err) => {
+        console.error('Socket connection error:', err);
+      });
       socket.on('taskUpdated', (task) => {
+        console.log('Task updated from server:', task, 'elapsedTime:', task.elapsedTime);
         const normalizedColumn = task.column.replace(' ', '_');
         setColumns((prev) => {
           const newColumns = { ...prev };
           if (newColumns[normalizedColumn]) {
             const taskIndex = newColumns[normalizedColumn].findIndex((t) => t._id === task._id);
             if (taskIndex !== -1) {
-              newColumns[normalizedColumn][taskIndex] = task;
+              newColumns[normalizedColumn][taskIndex] = { ...task, timer: null };
             } else {
-              newColumns[normalizedColumn].push(task);
+              newColumns[normalizedColumn].push({ ...task, timer: null });
             }
           }
           return newColumns;
@@ -101,21 +107,45 @@ function Board({ socket }) {
     }
   }, [socket, newTask]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setColumns((prev) => {
+        const newColumns = { ...prev };
+        Object.keys(newColumns).forEach((column) => {
+          newColumns[column] = newColumns[column].map((task) => {
+            if (task.startTime && !task.completed) {
+              const now = Date.now();
+              task.elapsedTime = now - task.startTime;
+              console.log('Updating timer for task:', task._id, 'elapsedTime:', task.elapsedTime);
+            }
+            return task;
+          });
+        });
+        return newColumns;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleTask = (column, taskId, event) => {
     setColumns((prev) => {
       const newColumns = { ...prev };
-      const task = newColumns[column].find((t) => t._id === taskId);
+      const task = newColumns[column]?.find((t) => t._id === taskId);
       if (task) {
         task.completed = !task.completed;
+        if (task.completed && task.startTime) {
+          task.startTime = null;
+        }
         socket.emit('taskUpdate', task);
       }
       return newColumns;
     });
 
-    if (!columns[column].find((task) => task._id === taskId).completed) {
+    if (!columns[column]?.find((task) => task._id === taskId)?.completed) {
       const taskElement = event.currentTarget;
       const checkbox = taskElement.querySelector('.checkbox');
-      const rect = checkbox.getBoundingClientRect();
+      const rect = checkbox.getBoundingRect();
       const board = boardRef.current;
 
       for (let i = 0; i < 8; i++) {
@@ -140,7 +170,7 @@ function Board({ socket }) {
         completed: false,
         color: null,
         startTime: null,
-        elapsedTime: null,
+        elapsedTime: 0,
         column: column.replace('_', ' '),
       };
       socket.emit('taskUpdate', task);
@@ -179,7 +209,7 @@ function Board({ socket }) {
   const handleColorSelect = (color) => {
     setColumns((prev) => {
       const newColumns = { ...prev };
-      const task = newColumns[contextMenu.column].find((t) => t._id === contextMenu.taskId);
+      const task = newColumns[contextMenu.column]?.find((t) => t._id === contextMenu.taskId);
       if (task) {
         task.color = color;
         socket.emit('taskUpdate', task);
@@ -193,21 +223,11 @@ function Board({ socket }) {
   const handleStartTimer = (taskId, column) => {
     setColumns((prev) => {
       const newColumns = { ...prev };
-      const task = newColumns[column].find((t) => t._id === taskId);
+      const task = newColumns[column]?.find((t) => t._id === taskId);
       if (task) {
-        const startTime = Date.now();
-        task.startTime = startTime;
+        task.startTime = Date.now();
         task.elapsedTime = 0;
-        task.timer = setInterval(() => {
-          setColumns((prevCols) => {
-            const updatedColumns = { ...prevCols };
-            const t = updatedColumns[column].find((t) => t._id === taskId);
-            if (t && t.startTime) {
-              t.elapsedTime = Date.now() - startTime;
-            }
-            return updatedColumns;
-          });
-        }, 1000);
+        console.log('Starting timer for task:', task._id, 'at', task.startTime);
         socket.emit('taskUpdate', task);
       }
       return newColumns;
@@ -218,12 +238,11 @@ function Board({ socket }) {
   const handleStopTimer = (taskId, column) => {
     setColumns((prev) => {
       const newColumns = { ...prev };
-      const task = newColumns[column].find((t) => t._id === taskId);
+      const task = newColumns[column]?.find((t) => t._id === taskId);
       if (task) {
-        clearInterval(task.timer);
         task.completed = true;
-        task.timer = null;
         task.startTime = null;
+        console.log('Stopping timer for task:', task._id);
         socket.emit('taskUpdate', task);
       }
       return newColumns;
@@ -232,16 +251,18 @@ function Board({ socket }) {
   };
 
   const handleEditTask = (taskId, column) => {
-    const task = columns[column].find((t) => t._id === taskId);
-    setEditTask({ taskId, column, title: task.title });
-    setContextMenu(null);
+    const task = columns[column]?.find((t) => t._id === taskId);
+    if (task) {
+      setEditTask({ taskId, column, title: task.title });
+      setContextMenu(null);
+    }
   };
 
   const handleEditSubmit = (taskId, column) => {
-    if (editTask.title.trim()) {
+    if (editTask?.title.trim()) {
       setColumns((prev) => {
         const newColumns = { ...prev };
-        const task = newColumns[column].find((t) => t._id === taskId);
+        const task = newColumns[column]?.find((t) => t._id === taskId);
         if (task) {
           task.title = editTask.title;
           socket.emit('taskUpdate', task);
@@ -416,7 +437,7 @@ function Board({ socket }) {
           >
             Редактировать
           </div>
-          {columns[contextMenu.column].find((task) => task._id === contextMenu.taskId).startTime ? (
+          {columns[contextMenu.column]?.find((task) => task._id === contextMenu.taskId)?.startTime ? (
             <div
               className="context-menu-item"
               onClick={() => handleStopTimer(contextMenu.taskId, contextMenu.column)}
