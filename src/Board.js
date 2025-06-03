@@ -16,6 +16,27 @@ function Board({ socket }) {
   const contextMenuRef = useRef(null);
   const colorMenuRef = useRef(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const targetDate = new Date('2026-02-14T00:00:00');
+    const updateTimer = () => {
+      const now = new Date();
+      const diff = targetDate - now;
+      if (diff <= 0) {
+        setTimeLeft('0д 0ч 0м 0с');
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeLeft(`${days}д ${hours}ч ${minutes}м ${seconds}с`);
+    };
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const currentToken = localStorage.getItem('token');
@@ -145,7 +166,7 @@ function Board({ socket }) {
     if (!columns[column]?.find((task) => task._id === taskId)?.completed) {
       const taskElement = event.currentTarget;
       const checkbox = taskElement.querySelector('.checkbox');
-      const rect = checkbox.getBoundingRect();
+      const rect = checkbox.getBoundingClientRect();
       const board = boardRef.current;
 
       for (let i = 0; i < 8; i++) {
@@ -326,9 +347,23 @@ function Board({ socket }) {
 
   return (
     <div className="board-container" ref={boardRef}>
-      <h1 style={{ color: '#ffffff', textAlign: 'center', marginBottom: '20px' }}>
-        Доска задач
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+        <h1 style={{ color: '#ffffff', margin: '0 10px' }}>
+          Доска задач
+        </h1>
+        <span style={{ 
+          color: '#ff3333', 
+          fontSize: '18px',
+          fontWeight: 'bold',
+          padding: '6px 12px',
+          background: 'linear-gradient(45deg, rgba(255, 51, 51, 0.2), rgba(255, 51, 51, 0.4))',
+          border: '1px solid #ff3333',
+          borderRadius: '6px',
+          boxShadow: '0 0 10px rgba(255, 51, 51, 0.6)',
+        }}>
+          {timeLeft}
+        </span>
+      </div>
       {isColumnsLoaded && (
         <div className="board">
           {Object.keys(columns).map((column) => (
