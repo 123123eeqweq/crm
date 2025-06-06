@@ -19,7 +19,7 @@ function Board({ socket }) {
   const [timeLeft, setTimeLeft] = useState('');
 
   useEffect(() => {
-    const targetDate = new Date('2026-02-14T00:00:00');
+    const targetDate = new Date('2025-08-02T00:00:00');
     const updateTimer = () => {
       const now = new Date();
       const diff = targetDate - now;
