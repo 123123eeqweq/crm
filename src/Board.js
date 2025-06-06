@@ -86,30 +86,46 @@ function Board({ socket }) {
         console.log('Socket connected');
       });
       socket.on('connect_error', (err) => {
-        console.error('Socket connection error:', err);
+        console.error('Socket connection error:', err.message);
       });
       socket.on('taskUpdated', (task) => {
-        console.log('Task updated from server:', task, 'elapsedTime:', task.elapsedTime);
+        console.log('Received taskUpdated:', task);
         const normalizedColumn = task.column.replace(' ', '_');
         setColumns((prev) => {
           const newColumns = { ...prev };
+          let taskMoved = false;
+
           if (newColumns[normalizedColumn]) {
             const taskIndex = newColumns[normalizedColumn].findIndex((t) => t._id === task._id);
             if (taskIndex !== -1) {
               newColumns[normalizedColumn][taskIndex] = { ...task, timer: null };
-            } else {
-              newColumns[normalizedColumn].push({ ...task, timer: null });
+              return newColumns;
             }
           }
+
+          Object.keys(newColumns).forEach((col) => {
+            const taskIndex = newColumns[col].findIndex((t) => t._id === task._id);
+            if (taskIndex !== -1) {
+              newColumns[col].splice(taskIndex, 1);
+              if (newColumns[normalizedColumn]) {
+                newColumns[normalizedColumn].push({ ...task, timer: null });
+                taskMoved = true;
+              }
+            }
+          });
+
+          if (!taskMoved && newColumns[normalizedColumn]) {
+            newColumns[normalizedColumn].push({ ...task, timer: null });
+          } else if (!newColumns[normalizedColumn]) {
+            console.warn(`Column ${normalizedColumn} not found`);
+          }
+
           return newColumns;
         });
-        if (newTask && task.title === newTask) {
-          setNewTask('');
-          setIsAdding((prev) => ({ ...prev, [normalizedColumn]: false }));
-        }
       });
 
       socket.on('taskDeleted', (taskId) => {
+        console.log('Received taskDeleted:', taskId);
         setColumns((prev) => {
           const newColumns = { ...prev };
           Object.keys(newColumns).forEach((col) => {
@@ -134,9 +150,10 @@ function Board({ socket }) {
         const newColumns = { ...prev };
         Object.keys(newColumns).forEach((column) => {
           newColumns[column] = newColumns[column].map((task) => {
-            if (task.startTime && !task.completed) {
+            if (task.startTime && !task.completed && !task.paused) {
               const now = Date.now();
-              task.elapsedTime = now - task.startTime;
+              task.elapsedTime = (task.elapsedTime || 0) + (now - task.startTime);
+              task.startTime = now;
               console.log('Updating timer for task:', task._id, 'elapsedTime:', task.elapsedTime);
             }
             return task;
@@ -156,7 +173,10 @@ function Board({ socket }) {
       if (task) {
         task.completed = !task.completed;
         if (task.completed && task.startTime) {
+          task.elapsedTime = (task.elapsedTime || 0) + (Date.now() - task.startTime);
           task.startTime = null;
+          task.paused = false;
+          task.pauseStartTime = null;
         }
         socket.emit('taskUpdate', task);
       }
@@ -174,8 +194,8 @@ function Board({ socket }) {
         firework.className = 'firework';
         const angle = (i * 360) / 8;
         const distance = 50 + Math.random() * 20;
-        firework.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
-        firework.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+        firework.style.setProperty('--x', `${Math.cos(angle * Math.PI / 180)}px`);
+        firework.style.setProperty('--y', `${Math.sin(angle * Math.PI / 180) * distance}px`);
         firework.style.left = `${rect.left + rect.width / 2}px`;
         firework.style.top = `${rect.top + rect.height / 2}px`;
         board.appendChild(firework);
@@ -193,8 +213,11 @@ function Board({ socket }) {
         startTime: null,
         elapsedTime: 0,
         column: column.replace('_', ' '),
+        paused: false,
+        pauseStartTime: null,
       };
       socket.emit('taskUpdate', task);
+      setNewTask(''); // Clear the input field after adding the task
     }
   };
 
@@ -248,8 +271,31 @@ function Board({ socket }) {
       if (task) {
         task.startTime = Date.now();
         task.elapsedTime = 0;
+        task.paused = false;
+        task.pauseStartTime = null;
         console.log('Starting timer for task:', task._id, 'at', task.startTime);
         socket.emit('taskUpdate', task);
+      }
+      return newColumns;
+    });
+    setContextMenu(null);
+  };
+
+  const handlePauseTimer = (taskId, column, pause) => {
+    setColumns((prev) => {
+      const newColumns = { ...prev };
+      const task = newColumns[column]?.find((t) => t._id === taskId);
+      if (task) {
+        task.paused = pause;
+        task.pauseStartTime = pause ? Date.now() : null;
+        if (pause && task.startTime) {
+          task.elapsedTime = (task.elapsedTime || 0) + (Date.now() - task.startTime);
+          task.startTime = null;
+        } else if (!pause) {
+          task.startTime = Date.now();
+        }
+        console.log(`${pause ? 'Pausing' : 'Resuming'} timer for task:`, task._id);
+        socket.emit('taskPause', taskId, pause);
       }
       return newColumns;
     });
@@ -263,6 +309,11 @@ function Board({ socket }) {
       if (task) {
         task.completed = true;
         task.startTime = null;
+        task.paused = false;
+        task.pauseStartTime = null;
+        if (task.startTime) {
+          task.elapsedTime = (task.elapsedTime || 0) + (Date.now() - task.startTime);
+        }
         console.log('Stopping timer for task:', task._id);
         socket.emit('taskUpdate', task);
       }
@@ -345,6 +396,13 @@ function Board({ socket }) {
 
   const isColumnsLoaded = Object.keys(columns).length > 0;
 
+  const getProgress = (column) => {
+    const tasks = columns[column] || [];
+    const total = tasks.length;
+    const completed = tasks.filter((task) => task.completed).length;
+    return total > 0 ? (completed / total) * 100 : 0;
+  };
+
   return (
     <div className="board-container" ref={boardRef}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
@@ -368,7 +426,17 @@ function Board({ socket }) {
         <div className="board">
           {Object.keys(columns).map((column) => (
             <div className="column" key={column}>
-              <h2>{column.replace('_', ' ')}</h2>
+              <div className="column-header">
+                <h2>{column.replace('_', ' ')}</h2>
+                {(column === 'KLMN' || column === 'KLVR') && (
+                  <div className="progress-bar1">
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${getProgress(column)}%` }}
+                    ></div>
+                  </div>
+                )}
+              </div>
               {columns[column].map((task) => (
                 <div
                   key={task._id}
@@ -410,7 +478,7 @@ function Board({ socket }) {
                       <>
                         <span className="task-title">{task.title}</span>
                         {task.elapsedTime !== null && (
-                          <span className={`timer ${task.startTime ? 'active' : 'stopped'}`}>
+                          <span className={`timer ${task.paused ? 'paused' : task.startTime ? 'active' : 'stopped'}`}>
                             {formatTime(task.elapsedTime)}
                           </span>
                         )}
@@ -472,13 +540,26 @@ function Board({ socket }) {
           >
             Редактировать
           </div>
-          {columns[contextMenu.column]?.find((task) => task._id === contextMenu.taskId)?.startTime ? (
-            <div
-              className="context-menu-item"
-              onClick={() => handleStopTimer(contextMenu.taskId, contextMenu.column)}
-            >
-              Завершить
-            </div>
+          {columns[contextMenu.column]?.find((task) => task._id === contextMenu.taskId)?.startTime || 
+           columns[contextMenu.column]?.find((task) => task._id === contextMenu.taskId)?.paused ? (
+            <>
+              <div
+                className="context-menu-item"
+                onClick={() => handlePauseTimer(
+                  contextMenu.taskId,
+                  contextMenu.column,
+                  !columns[contextMenu.column]?.find((task) => task._id === contextMenu.taskId)?.paused
+                )}
+              >
+                {columns[contextMenu.column]?.find((task) => task._id === contextMenu.taskId)?.paused ? 'Возобновить' : 'Пауза'}
+              </div>
+              <div
+                className="context-menu-item"
+                onClick={() => handleStopTimer(contextMenu.taskId, contextMenu.column)}
+              >
+                Завершить
+              </div>
+            </>
           ) : (
             <div
               className="context-menu-item"
